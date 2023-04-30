@@ -1,0 +1,12 @@
+name: "ei"
+displayName: "Endless Interstellar"
+author: "f5of"
+main: "core.EICore"
+repo: ""
+subtitle: "Still in progress"
+description: "Spaceee~"
+version: "0.1a"
+minGameVersion: 143
+java: true
+hidden: false
+hideBrowser: true
