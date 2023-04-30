@@ -1,0 +1,256 @@
+// Provided by Zelaux & nekit508
+//file:noinspection GroovyAssignabilityCheck
+
+import java.time.format.DateTimeFormatter
+
+buildscript {
+
+}
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.6.0"
+    id "org.jetbrains.kotlin.kapt" version "1.6.0"
+}
+
+ext {
+    modName = "MMT"
+
+    module = { String module, String name ->
+        if(name.contains(':')) name = name.split(':').last()
+        if (modules.get(module) == null) {
+            println("${module} not founded")
+            return
+        }
+        return "${name == "" ? modules.get(module)[0] : modules.get(module)[0].replaceAll(":", ".")}" +
+                (name != "" ? ":${name}" : "") + ":${modules.get(module)[1]}"
+    }
+    getJarFileName = { String name ->
+        return "${modName}-${name}.jar"
+    }
+    doExec = { cmd ->
+        def proc = cmd.execute(null, new File("$buildDir/libs"))
+        proc.waitForProcessOutput(System.out, System.err)
+    }
+
+    sdkRoot = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
+
+    sdkVersion = '30'
+
+    modules = [:]
+    modules.arc = ["com.github.Anuken:Arc", "v143"]
+    modules.javapoet = ["com.squareup:javapoet", "1.13.0"]
+    modules.mindustry = ["com.github.Anuken:Mindustry", "v143"]
+    modules.jabel = ["com.github.Anuken:jabel", "34e4c172e65b3928cd9eabe1993654ea79c409cd"]
+    modules.ktlStd = ["org.jetbrains.kotlin:kotlin-stdlib-jdk8", "1.6.0"]
+
+    projectVersion  = "v1.0"
+
+    // no main classes
+    mains = [:]
+
+    deps = [:]
+    deps.impl = [:]
+    deps.comp = [:]
+    deps.proc = [:]
+    // core dependencies
+    deps.impl.core = [
+            module("ktlStd", ""),
+    ]
+    deps.comp.core = [
+            project(":annotations"),
+            module("mindustry", "core"),
+            module("arc", "arc-core"),
+            module("arc", "extensions:flabel"),
+            module("arc", "extensions:freetype"),
+            module("arc", "extensions:g3d"),
+            module("arc", "extensions:fx"),
+            module("arc", "discord"),
+            module("arc", "extensions:arcnet"),
+    ]
+    deps.proc.core = [
+            module("jabel", ""),
+            project(":annotations"),
+    ]
+    // annotations dependencies
+    deps.impl.annotations = [
+            module("javapoet", ""),
+            module("arc", "arc-core"),
+    ]
+    deps.proc.annotations = [
+            module("jabel", ""),
+    ]
+    // desktop dependencies
+    deps.impl.desktop = [
+            project(":core")
+    ] + deps.impl.core
+    deps.comp.desktop = [
+    ] + deps.comp.core
+    deps.proc.desktop = [
+    ] + deps.proc.core
+    // android dependencies
+    deps.impl.android = [
+            project(":core")
+    ] + deps.impl.core
+    deps.comp.android = [
+    ] + deps.comp.core
+    deps.proc.android = [
+    ] + deps.proc.core
+}
+
+allprojects {
+    repositories{
+        mavenLocal()
+        google()
+        mavenCentral()
+        maven{ url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        maven{ url "https://oss.sonatype.org/content/repositories/releases/" }
+        maven{ url 'https://jitpack.io' }
+    }
+
+    apply plugin: 'java'
+    apply plugin: "java-library"
+    apply plugin: 'maven-publish'
+    apply plugin: "kotlin"
+
+    compileJava.options.fork = true
+
+    compileKotlin{
+        sourceCompatibility = JavaVersion.VERSION_16
+        targetCompatibility = JavaVersion.VERSION_1_8
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
+    }
+    compileTestKotlin {
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
+    }
+
+    tasks.withType(JavaCompile){
+        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_16
+        options.encoding = "UTF-8"
+        options.compilerArgs += ["-Xlint:deprecation"]
+        options.compilerArgs.addAll(['--release', '8'])
+
+        options.forkOptions.jvmArgs.addAll([
+                '--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED',
+                '--add-opens=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED'
+        ])
+    }
+
+    jar {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        archiveFileName = getJarFileName(project.name)
+
+        from{
+            configurations.compileClasspath.collect{
+                if (it.exists())
+                    it.isDirectory() ? it : zipTree(it)
+            }
+        }
+
+        from(rootDir){
+            include "mod.hjson"
+            include "mod.json"
+            include "icon.png"
+        }
+
+        from("assets/"){
+            include "**"
+        }
+    }
+
+    dependencies {
+        ArrayList<String> listImpl = (ArrayList<String>) deps.impl.get(project.name)
+        if (listImpl != null) {
+            listImpl.forEach(dep -> {
+                implementation dep
+            })
+        }
+        ArrayList<String> listComp = (ArrayList<String>) deps.comp.get(project.name)
+        if (listComp != null) {
+            listComp.forEach(dep -> {
+                compileOnly dep
+            })
+        }
+        ArrayList<String> listProc = (ArrayList<String>) deps.proc.get(project.name)
+        if (listProc != null) {
+            listProc.forEach(dep -> {
+                annotationProcessor dep
+            })
+        }
+    }
+
+    task writeProcessors {
+        outputs.upToDateWhen{ false }
+        new File(rootDir, "annotations/src/main/resources/META-INF/services/").mkdirs()
+        def processorFile = new File(rootDir, "annotations/src/main/resources/META-INF/services/javax.annotation.processing.Processor")
+        def text = new StringBuilder()
+        def files = new File(rootDir, "annotations/src")
+        files.eachFileRecurse(
+                groovy.io.FileType.FILES
+        ){ file ->
+            if(file.name.endsWith(".java") && file.text.contains("// processor"))
+                text.append(file.path.substring(files.path.length() + 1)).append("\n")
+        }
+        processorFile.text = text.toString().replace(".java", "").replace("/", ".").replace("\\", ".")
+    }
+    compileJava.dependsOn(writeProcessors)
+
+    // use for test builds
+    task mjar(){
+        dependsOn "jar"
+        ext{
+            move = { String intoPath ->
+                delete{
+                    delete "${intoPath}/${getJarFileName(project.name)}"
+                }
+                copy{
+                    from "$buildDir/libs/${getJarFileName(project.name)}"
+                    into intoPath
+                }
+                println "Moved into " + intoPath
+            }
+        }
+        doLast{
+            def modsDirectories = []
+            def file = new File(rootDir, "modsDirectories.txt")
+            if(file.exists()){
+                BufferedReader reader = new BufferedReader(new FileReader(file))
+                reader.lines().forEach(line -> modsDirectories.add(line))
+            }else{
+                modsDirectories.add("classic")
+            }
+            for(String directory : modsDirectories){
+                if (directory.startsWith("#") || directory.startsWith("//")){
+                    println "Directory \"$directory\" was skipped."
+                    continue
+                }
+                if(directory == "classic"){
+                    directory = "${System.getenv("APPDATA")}/Mindustry/mods/"
+                }
+                move(directory)
+            }
+            def time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"))
+            println "Build ended at: ${time}"
+        }
+    }
+}
+
+// only root project task
+// using by github actions
+task deploy {
+    doLast {
+        new File("$rootDir/artifacts").mkdirs()
+        subprojects.each { p ->
+            delete {
+                delete "artifacts/${getJarFileName(p.name)}"
+            }
+            copy {
+                from "${p.buildDir}/libs/${getJarFileName(p.name)}"
+                into "artifacts/"
+            }
+        }
+    }
+}
