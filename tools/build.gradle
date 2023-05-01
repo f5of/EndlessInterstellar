@@ -1,0 +1,15 @@
+sourceSets.main.java.srcDirs = ["src/", "$buildDir/generated/sources/annotationProcessor/java/main"]
+sourceSets.main.kotlin.srcDirs = ["src/", "$buildDir/generated/sources/annotationProcessor/java/main"]
+
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest.attributes("Main-Class": "packer.AtlasPacker")
+    archiveFileName = "atlasPacker.jar"
+
+    from{
+        configurations.compileClasspath.collect{
+            if (it.exists())
+                it.isDirectory() ? it : zipTree(it)
+        }
+    }
+}

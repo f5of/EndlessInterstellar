@@ -12,7 +12,7 @@ plugins {
 }
 
 ext {
-    modName = "MMT"
+    modName = "ei"
 
     module = { String module, String name ->
         if(name.contains(':')) name = name.split(':').last()
@@ -27,7 +27,7 @@ ext {
         return "${modName}-${name}.jar"
     }
     doExec = { cmd ->
-        def proc = cmd.execute(null, new File("$buildDir/libs"))
+        def proc = cmd.execute(null, rootDir)
         proc.waitForProcessOutput(System.out, System.err)
     }
 
@@ -94,6 +94,15 @@ ext {
     ] + deps.comp.core
     deps.proc.android = [
     ] + deps.proc.core
+    // tools dependencies
+    deps.impl.tools = [
+            module("arc", "arc-core"),
+            module("arc", "backends:backend-sdl"),
+            module("arc", "natives:natives-desktop")
+    ]
+    deps.proc.tools = [
+            project(":annotations")
+    ]
 }
 
 allprojects {
@@ -144,9 +153,8 @@ allprojects {
         archiveFileName = getJarFileName(project.name)
 
         from{
-            configurations.compileClasspath.collect{
-                if (it.exists())
-                    it.isDirectory() ? it : zipTree(it)
+            configurations.runtimeClasspath.collect{
+                it.isDirectory() ? it : zipTree(it)
             }
         }
 
@@ -252,5 +260,19 @@ task deploy {
                 into "artifacts/"
             }
         }
+    }
+}
+
+// only root project task
+task pack {
+    dependsOn "tools:jar"
+
+    doLast {
+        String args = ""
+        project(":" + prs).sourceSets.main.resources.srcDirs.each { r ->
+            args += r.toString() + "/mod-sprites" + ";"
+        }
+        args = args.substring(0, args.length()-1)
+        doExec("java -jar ${project(":tools").buildDir}/libs/atlasPacker.jar sprites=${args} outdir=${project(":" + prs).sourceSets.main.resources.srcDirs[0]}")
     }
 }

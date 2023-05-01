@@ -1,9 +1,10 @@
 package core;
 
 import annotations.Annotations;
+import arc.Core;
 import content.EIContentLoader;
+import files.EIAtlasLoader;
 import mindustry.mod.Mod;
-import mindustry.world.blocks.storage.CoreBlock;
 
 @Annotations.ModCore
 public class EICore extends Mod {
