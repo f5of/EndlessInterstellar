@@ -26,7 +26,7 @@ public class BeamTransmitter extends BeamNode {
                 var other = Vars.world.build(x + j * dir.x, y + j * dir.y);
 
                 if (other == null) continue;
-                if (!(other.block instanceof BeamTransmitter)) continue;
+                if (!(other.block instanceof BeamNode)) continue;
 
                 if(other.isInsulated()){
                     break;
@@ -65,12 +65,11 @@ public class BeamTransmitter extends BeamNode {
                     var other = Vars.world.build(tile.x + j * dir.x, tile.y + j * dir.y);
 
                     if (other == null) continue;
-                    if (!(other.block instanceof BeamTransmitter)) continue;
+                    if (!(other.block instanceof BeamNode)) continue;
 
-                    if(other != null && other.isInsulated()) break;
+                    if(other.isInsulated()) break;
 
-                    if(other != null && other.block.hasPower && other.team == team &&
-                            !(other.block instanceof PowerNode)){
+                    if(other.block.hasPower && other.team == team && !(other.block instanceof PowerNode)){
                         links[i] = other;
                         dests[i] = Vars.world.tile(tile.x + j * dir.x, tile.y + j * dir.y);
                         break;

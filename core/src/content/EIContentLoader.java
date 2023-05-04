@@ -4,6 +4,7 @@ import mindustry.ctype.Content;
 
 public class EIContentLoader {
     public static void load() {
+        EIItems.load();
         EIBlocks.load();
     }
 

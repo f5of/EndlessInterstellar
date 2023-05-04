@@ -1,24 +1,50 @@
 package content;
 
-import arc.Core;
 import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.TextureRegion;
-import arc.util.Log;
+import arc.struct.Seq;
+import mindustry.content.Blocks;
+import mindustry.content.Fx;
 import mindustry.content.Items;
-import mindustry.graphics.Shaders;
+import mindustry.gen.Sounds;
+import mindustry.graphics.Pal;
 import mindustry.type.Category;
 import mindustry.type.ItemStack;
+import mindustry.world.blocks.distribution.Conveyor;
+import mindustry.world.blocks.environment.SteamVent;
+import mindustry.world.blocks.liquid.ArmoredConduit;
+import mindustry.world.blocks.power.BeamNode;
+import mindustry.world.blocks.production.GenericCrafter;
 import mindustry.world.blocks.storage.CoreBlock;
+import mindustry.world.draw.DrawDefault;
+import mindustry.world.draw.DrawFlame;
+import mindustry.world.draw.DrawMulti;
+import mindustry.world.meta.Attribute;
 import world.blocks.prower.BeamTransmitter;
 
 public class EIBlocks {
     public static CoreBlock colonyCore;
     public static BeamTransmitter rayTransmitter;
+    public static BeamNode substation;
+    public static Conveyor titaniumConveyor;
+    public static ArmoredConduit titaniumConduit;
+    public static GenericCrafter kryniteSmelter;
+
+    public static SteamVent snowVent, stoneVent;
 
     public static void load() {
+        snowVent = new SteamVent("snow-vent"){{
+            variants = 2;
+            parent = blendGroup = Blocks.snow;
+            attributes.set(Attribute.steam, 0.25f);
+        }};
+        stoneVent = new SteamVent("stone-vent"){{
+            variants = 2;
+            parent = blendGroup = Blocks.stone;
+            attributes.set(Attribute.steam, 1f);
+        }};
+
         colonyCore = new CoreBlock("colony-core"){{
-            requirements(Category.power, ItemStack.with(Items.copper, 1));
+            requirements(Category.effect, ItemStack.with(EIItems.copper, 1));
             health = 3600;
             armor = 5f;
             size = 4;
@@ -36,26 +62,61 @@ public class EIBlocks {
                 public float getPowerProduction() {
                     return 200f / 60f;
                 }
-
-                int i = 0;
-                @Override
-                public void draw() {
-                    super.draw();
-
-                    i = 0;
-                    Core.atlas.getTextures().each(t -> {
-                        i++;
-                        Draw.rect(new TextureRegion(t), x + 256 * (i % 5), y + 256 * (i / 5), 256, 256);
-                    });
-                }
             }
         };
         rayTransmitter = new BeamTransmitter("ray-transmitter"){{
-            requirements(Category.power, ItemStack.with(Items.copper, 1));
+            requirements(Category.power, ItemStack.with(EIItems.copper, 2, EIItems.titanium, 3));
             health = 20;
             size = 1;
             range = 15;
-            laserColor1 = Color.valueOf("fd9e81");
+        }};
+        substation = new BeamNode("substation"){{
+            requirements(Category.power, ItemStack.with(EIItems.copper, 10, EIItems.titanium, 2));
+            range = 5;
+            health = 40;
+            size = 1;
+        }};
+
+        titaniumConveyor = new Conveyor("titanium-conveyor"){{
+            requirements(Category.distribution, ItemStack.with(Items.copper, 2, Items.titanium, 1));
+            health = 20;
+            size = 1;
+            speed = 10 / 60f / 2f;
+            itemCapacity = 2;
+            displayedSpeed = 10f;
+
+            hasPower = true;
+            consumesPower = true;
+            conductivePower = true;
+            consumePower(10 / 60f);
+        }};
+
+        titaniumConduit = new ArmoredConduit("titanium-conduit"){{
+            requirements(Category.liquid, ItemStack.with(EIItems.krynite, 1, EIItems.titanium, 1));
+            size = 1;
+            botColor = Pal.darkestMetal;
+            leaks = true;
+            liquidCapacity = 20f;
+            liquidPressure = 2f;
+            health = 20;
+        }};
+
+        kryniteSmelter = new GenericCrafter("krynite-smelter"){{
+            requirements(Category.crafting, ItemStack.with(EIItems.titanium, 40, EIItems.copper, 50));
+            craftEffect = Fx.smeltsmoke;
+            outputItem = new ItemStack(EIItems.krynite, 1);
+            craftTime = 3 * 60;
+            itemCapacity = 20;
+            size = 2;
+            hasPower = true;
+            hasLiquids = false;
+            drawer = new DrawMulti(new DrawDefault(), new DrawFlame(Color.valueOf("ffef99")));
+            ambientSound = Sounds.smelter;
+            ambientSoundVolume = 0.07f;
+            health = 160;
+
+            consumeItems(ItemStack.with(EIItems.copper, 3, EIItems.titanium, 1));
+            consumePower(80 / 60f);
         }};
     }
 }
