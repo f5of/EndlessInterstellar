@@ -146,6 +146,7 @@ nb-configuration.xml
 /artifacts/
 /local.properties
 .gradle/
+/cache
 gradle-app.setting
 
 ## OS Specific

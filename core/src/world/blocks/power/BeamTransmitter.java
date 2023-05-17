@@ -1,6 +1,9 @@
-package world.blocks.prower;
+package world.blocks.power;
 
+import annotations.Annotations;
+import arc.graphics.g2d.TextureRegion;
 import arc.math.geom.Geometry;
+import arc.util.Log;
 import mindustry.Vars;
 import mindustry.gen.Building;
 import mindustry.graphics.Drawf;
@@ -10,6 +13,9 @@ import mindustry.world.blocks.power.PowerGraph;
 import mindustry.world.blocks.power.PowerNode;
 
 public class BeamTransmitter extends BeamNode {
+    @Annotations.Load(postfix = "-reg")
+    public TextureRegion region;
+
     public BeamTransmitter(String name) {
         super(name);
     }
