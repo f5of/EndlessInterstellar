@@ -14,7 +14,7 @@ sourceSets.main.resources.srcDirs = []
 
 ext {
     cleanBuilds = {
-        subprojects.each {Project p ->
+        subprojects.each { Project p ->
             if (p.buildDir.exists()) {
                 delete {
                     it.delete(p.buildDir.listFiles() - p.ext.child(p.buildDir, "generated"))
@@ -76,28 +76,27 @@ subprojects { Project project ->
         var finalAPArgs = []
         APArgs.each { String str ->
             if (!str.contains("-A"))
-                finalAPArgs.add("-A" + str);
+                finalAPArgs.add("-A" + str)
         }
         options.compilerArgs += finalAPArgs + "-AProjectName=$project.name"
     }
 
     project.tasks.create("cjar") {
         dependsOn project.tasks.jar
-
         doLast {
             rootProject.ext.cleanBuilds()
         }
     }
 
     project.tasks.jar {
-        from {
-            configurations.runtimeClasspath.collect { File file ->
-                file.isDirectory() ? file : zipTree(file)
-            }
-        }
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
         doLast {
+            from {
+                configurations.runtimeClasspath.collect { File file ->
+                    file.isDirectory() ? file : zipTree(file)
+                }
+            }
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
             copy {
                 from {
                     archiveFile.get()
@@ -108,4 +107,8 @@ subprojects { Project project ->
             }
         }
     }
+}
+
+task deploy {
+    finalizedBy subprojects.stream().<Task>map(p -> p.tasks.jar).toArray()
 }
