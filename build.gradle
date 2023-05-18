@@ -146,7 +146,7 @@ task publishProj {
 task deploy {
     dependsOn subprojects.stream().<Task>map(p -> p.tasks.jar).toArray()
     doLast {
-        //rootProject.ext.cleanBuilds()
+        rootProject.ext.cleanBuilds()
     }
     finalizedBy rootProject.tasks.publishProj
 }
