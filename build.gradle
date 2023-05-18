@@ -1,8 +1,14 @@
+import java.util.function.Consumer
+
 // root gradle file by nekit508
 
-plugins {
-    id "java"
-    id "idea"
+allprojects { Project project ->
+    project.plugins.apply("java")
+    project.plugins.apply("idea")
+    project.plugins.apply("maven-publish")
+
+    version = "vT0.3.1"
+    group = "github.f5of.endless-interstellar"
 }
 
 wrapper {
@@ -22,12 +28,17 @@ ext {
             }
         }
     }
+
+    localProperties = new Properties()
+    localProperties.load(new FileInputStream(new File("$rootProject.projectDir/local.properties")))
+
+    setIfHasProp = { String property, Consumer<Object> set ->
+        if (localProperties.containsKey(property))
+            set.accept(localProperties.get(property))
+    }
 }
 
 subprojects { Project project ->
-    project.plugins.apply("java")
-    project.plugins.apply("idea")
-
     project.sourceSets.main.java.srcDirs = [
             "src",
             "$project.buildDir/generated/sources/annotationProcessor/java/main",
@@ -70,6 +81,7 @@ subprojects { Project project ->
     }
 
     project.tasks.withType(JavaCompile).configureEach {
+        rootProject.ext.setIfHasProp("org.gradle.java.home", v -> options.forkOptions.executable = v)
         options.encoding = "UTF-8"
         sourceCompatibility = JavaVersion.VERSION_16
         targetCompatibility = JavaVersion.VERSION_16
@@ -107,8 +119,31 @@ subprojects { Project project ->
             }
         }
     }
+
+    java {
+        withSourcesJar()
+        withJavadocJar()
+    }
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                groupId project.group
+                artifactId project.name
+                version project.version
+                from components.java
+            }
+        }
+    }
+}
+
+task publishProj {
+    doLast {
+        publishToMavenLocal
+    }
 }
 
 task deploy {
-    finalizedBy subprojects.stream().<Task>map(p -> p.tasks.jar).toArray()
+    dependsOn subprojects.stream().<Task>map(p -> p.tasks.cjar).toArray()
+    finalizedBy publishProj
 }
