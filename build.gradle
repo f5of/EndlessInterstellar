@@ -30,7 +30,8 @@ ext {
     }
 
     localProperties = new Properties()
-    localProperties.load(new FileInputStream(new File("$rootProject.projectDir/local.properties")))
+    if (new File("$rootProject.projectDir/local.properties").exists())
+        localProperties.load(new FileInputStream(new File("$rootProject.projectDir/local.properties")))
 
     setIfHasProp = { String property, Consumer<Object> set ->
         if (localProperties.containsKey(property))
