@@ -102,14 +102,13 @@ subprojects { Project project ->
     }
 
     project.tasks.jar {
-        doLast {
-            from {
-                configurations.runtimeClasspath.collect { File file ->
-                    file.isDirectory() ? file : zipTree(file)
-                }
+        from {
+            configurations.runtimeClasspath.collect { File file ->
+                file.isDirectory() ? file : zipTree(file)
             }
+        }
+        doLast {
             duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
             copy {
                 from {
                     archiveFile.get()
@@ -145,6 +144,9 @@ task publishProj {
 }
 
 task deploy {
-    dependsOn subprojects.stream().<Task>map(p -> p.tasks.cjar).toArray()
-    finalizedBy publishProj
+    dependsOn subprojects.stream().<Task>map(p -> p.tasks.jar).toArray()
+    doLast {
+        //rootProject.ext.cleanBuilds()
+    }
+    finalizedBy rootProject.tasks.publishProj
 }
