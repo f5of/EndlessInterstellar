@@ -183,7 +183,7 @@ task workflow {
         if (wType == "push") {
             String date = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss").format(Calendar.getInstance().getTime());
             doExec("git tag -a $date -m Tag \"Created by workflow.\"")
-            doExec("git push https://Zelaux:$wToken@github.com/f5cof/EndlessInterstellar")
+            doExec("git push --tags")
 
         } else if (wType == "pull-request") {
 
