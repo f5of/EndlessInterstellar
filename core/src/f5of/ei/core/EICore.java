@@ -1,7 +1,7 @@
-package core;
+package f5of.ei.core;
 
-import annotations.Annotations;
-import content.EIContentLoader;
+import f5of.annotations.Annotations;
+import f5of.ei.content.EIContentLoader;
 import mindustry.mod.Mod;
 
 @Annotations.ModCore

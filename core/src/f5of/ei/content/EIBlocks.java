@@ -1,6 +1,7 @@
-package content;
+package f5of.ei.content;
 
 import arc.graphics.Color;
+import f5of.ei.world.blocks.power.BeamTransmitter;
 import mindustry.content.Blocks;
 import mindustry.content.Fx;
 import mindustry.content.Items;
@@ -18,7 +19,6 @@ import mindustry.world.draw.DrawDefault;
 import mindustry.world.draw.DrawFlame;
 import mindustry.world.draw.DrawMulti;
 import mindustry.world.meta.Attribute;
-import world.blocks.power.BeamTransmitter;
 
 public class EIBlocks {
     public static CoreBlock colonyCore;

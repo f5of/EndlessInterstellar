@@ -1,9 +1,8 @@
-package world.blocks.power;
+package f5of.ei.world.blocks.power;
 
-import annotations.Annotations;
+import f5of.annotations.Annotations;
 import arc.graphics.g2d.TextureRegion;
 import arc.math.geom.Geometry;
-import arc.util.Log;
 import mindustry.Vars;
 import mindustry.gen.Building;
 import mindustry.graphics.Drawf;

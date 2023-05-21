@@ -1,4 +1,4 @@
-package content;
+package f5of.ei.content;
 
 import arc.graphics.Color;
 import mindustry.type.Item;

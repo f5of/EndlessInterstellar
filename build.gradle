@@ -1,3 +1,5 @@
+import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.function.Consumer
 
 // root gradle file by nekit508
@@ -9,6 +11,22 @@ allprojects { Project project ->
 
     version = "vT0.3.1"
     group = "github.f5of.endless-interstellar"
+
+    tasks.withType(JavaCompile).configureEach {
+        options.forkOptions.jvmArgs += "-Xms256m -Xmx1024m --illegal-access=permit" +
+                "--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED" +
+                "--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED" +
+                "--add-opens=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED" +
+                "--add-opens=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED" +
+                "--add-opens=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED" +
+                "--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED" +
+                "--add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED" +
+                "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED" +
+                "--add-opens=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED" +
+                "--add-opens=jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED" +
+                "--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED" +
+                "--add-opens=java.base/sun.reflect.annotation=ALL-UNNAMED"
+    }
 }
 
 wrapper {
@@ -18,17 +36,17 @@ wrapper {
 sourceSets.main.java.srcDirs = []
 sourceSets.main.resources.srcDirs = []
 
-ext {
-    cleanBuilds = {
+task cleanBuilds(type: Delete) {
+    doLast {
         subprojects.each { Project p ->
             if (p.buildDir.exists()) {
-                delete {
-                    it.delete(p.buildDir.listFiles() - p.ext.child(p.buildDir, "generated"))
-                }
+                delete(p.buildDir)
             }
         }
     }
+}
 
+ext {
     localProperties = new Properties()
     if (new File("$rootProject.projectDir/local.properties").exists())
         localProperties.load(new FileInputStream(new File("$rootProject.projectDir/local.properties")))
@@ -37,19 +55,22 @@ ext {
         if (localProperties.containsKey(property))
             set.accept(localProperties.get(property))
     }
+    doExec = { String cmd ->
+        var proc = cmd.execute(null, rootProject.projectDir)
+        proc.waitForProcessOutput(System.out, System.err)
+    }
 }
 
 subprojects { Project project ->
     project.sourceSets.main.java.srcDirs = [
-            "src",
-            "$project.buildDir/generated/sources/annotationProcessor/java/main",
+            "src", "gen"
     ]
     project.sourceSets.main.resources.srcDirs = [
             "res",
     ]
 
     project.ext {
-        APArgs = []
+        APArgs = ["ProjectName=$project.name", "OutputPackage=f5of.ei.files"]
 
         copyPaths = [
                 "$rootProject.projectDir/artifacts",
@@ -82,6 +103,7 @@ subprojects { Project project ->
     }
 
     project.tasks.withType(JavaCompile).configureEach {
+        options.generatedSourceOutputDirectory = project.file("gen")
         rootProject.ext.setIfHasProp("org.gradle.java.home", v -> options.forkOptions.executable = v)
         options.encoding = "UTF-8"
         sourceCompatibility = JavaVersion.VERSION_16
@@ -91,14 +113,16 @@ subprojects { Project project ->
             if (!str.contains("-A"))
                 finalAPArgs.add("-A" + str)
         }
-        options.compilerArgs += finalAPArgs + "-AProjectName=$project.name"
+        options.compilerArgs += finalAPArgs
+
+        doFirst {
+            delete options.generatedSourceOutputDirectory.get().asFile.listFiles()
+        }
     }
 
     project.tasks.create("cjar") {
         dependsOn project.tasks.jar
-        doLast {
-            rootProject.ext.cleanBuilds()
-        }
+        finalizedBy rootProject.tasks.cleanBuilds
     }
 
     project.tasks.jar {
@@ -145,8 +169,24 @@ task publishProj {
 
 task deploy {
     dependsOn subprojects.stream().<Task>map(p -> p.tasks.jar).toArray()
-    doLast {
-        rootProject.ext.cleanBuilds()
+    finalizedBy rootProject.tasks.cleanBuilds
+}
+
+task workflow {
+    if (wType == "push") {
+        dependsOn deploy
+    } else if (wType == "pull-request") {
+        dependsOn deploy
     }
-    finalizedBy rootProject.tasks.publishProj
+
+    doLast {
+        if (wType == "push") {
+            String date = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss").format(Calendar.getInstance().getTime());
+            doExec("git tag -a $date -m Tag \"Created by workflow.\"")
+            doExec("git push https://Zelaux:$wToken@github.com/f5cof/EndlessInterstellar")
+
+        } else if (wType == "pull-request") {
+
+        }
+    }
 }

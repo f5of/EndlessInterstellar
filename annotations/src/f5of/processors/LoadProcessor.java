@@ -1,8 +1,7 @@
-package processors;
+package f5of.processors;
 
-import annotations.Annotations;
-import arc.files.Fi;
-import arc.math.Mathf;
+import arc.util.Reflect;
+import f5of.annotations.Annotations;
 import arc.struct.ObjectMap;
 import arc.struct.Seq;
 import arc.util.Log;
@@ -18,13 +17,21 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardLocation;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Set;
 
+@SupportedOptions({"ProjectName", "OutputPackage"})
 @SupportedSourceVersion(SourceVersion.RELEASE_16)
-@SupportedAnnotationTypes("annotations.Annotations.Load")
+@SupportedAnnotationTypes("f5of.annotations.Annotations.Load")
 public class LoadProcessor extends AbstractProcessor {
     String projectName;
+    String outputPackage;
 
     Types types;
     Elements elements;
@@ -35,13 +42,6 @@ public class LoadProcessor extends AbstractProcessor {
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
-        String prn = processingEnv.getOptions().get("ProjectName");
-        projectName = prn != null ? prn : "none";
-        Log.info("Handling project @.", prn);
-
-        types = processingEnv.getTypeUtils();
-        elements = processingEnv.getElementUtils();
-        messager = processingEnv.getMessager();
         Log.logger = (l, t) -> {
             messager.printMessage(l == Log.LogLevel.debug ? Diagnostic.Kind.NOTE:
                             l == Log.LogLevel.info ? Diagnostic.Kind.NOTE :
@@ -49,13 +49,21 @@ public class LoadProcessor extends AbstractProcessor {
                                             l == Log.LogLevel.err ? Diagnostic.Kind.NOTE :
                                                     Diagnostic.Kind.OTHER,
                     Log.format((
-                    l == Log.LogLevel.debug ? "&lc&fb" :
-                            l == Log.LogLevel.info ? "&fb" :
-                                    l == Log.LogLevel.warn ? "&ly&fb" :
-                                            l == Log.LogLevel.err ? "&lr&fb" :
-                                                    "") + t + "&fr"));
+                            l == Log.LogLevel.debug ? "&lc&fb" :
+                                    l == Log.LogLevel.info ? "&fb" :
+                                            l == Log.LogLevel.warn ? "&ly&fb" :
+                                                    l == Log.LogLevel.err ? "&lr&fb" :
+                                                            "") + t + "&fr"));
         };
         super.init(processingEnv);
+        types = processingEnv.getTypeUtils();
+        elements = processingEnv.getElementUtils();
+        messager = processingEnv.getMessager();
+
+        projectName = get("ProjectName", "none");
+        outputPackage = get("OutputPackage", "none");
+
+        Log.info("Handling project @.", projectName);
     }
 
     @Override
@@ -67,7 +75,7 @@ public class LoadProcessor extends AbstractProcessor {
         return true;
     }
 
-    void processLoad( RoundEnvironment roundEnv) {
+    void processLoad(RoundEnvironment roundEnv) {
         ObjectMap<TypeElement, Seq<VariableElement>> elements = new ObjectMap<>();
 
         roundEnv.getElementsAnnotatedWith(Annotations.Load.class).forEach(element -> {
@@ -104,9 +112,16 @@ public class LoadProcessor extends AbstractProcessor {
         builder.addMethod(loader.build());
 
         try {
-            JavaFile.builder("files." + projectName, builder.build()).indent("    ").build().writeTo(processingEnv.getFiler());
+            Log.info("Writing file @.", outputPackage + "." + projectName);
+            JavaFile.builder(outputPackage + "." + projectName,
+                    builder.build()).build().writeTo(processingEnv.getFiler());
         } catch (IOException e) {
             Log.err("Class not witten.", e);
         }
+    }
+
+    String get(String name, String def) {
+        String t = processingEnv.getOptions().get(name);
+        return t != null ? t : def;
     }
 }

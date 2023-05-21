@@ -1,4 +1,4 @@
-package files;
+package f5of.ei.files;
 
 import arc.files.Fi;
 import arc.files.ZipFi;
