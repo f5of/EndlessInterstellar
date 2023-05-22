@@ -173,20 +173,21 @@ task deploy {
 }
 
 task workflow {
-    if (wType == "push") {
-        dependsOn deploy
-    } else if (wType == "pull-request") {
-        dependsOn deploy
-    }
 
     doLast {
         if (wType == "push") {
+            deploy {
+
+            }
             String date = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(Calendar.getInstance().getTime())
             doExec("git tag -a $date -m \"Created by workflow.\"")
+            println wToken
             doExec("git push https://$wToken@github.com/f5of/EndlessInterstellar.git --tag\n")
 
         } else if (wType == "pull-request") {
+            deploy {
 
+            }
         }
     }
 }
