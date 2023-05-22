@@ -172,22 +172,16 @@ task deploy {
     finalizedBy rootProject.tasks.cleanBuilds
 }
 
-task workflow {
+task workflowCommit {
+    dependsOn deploy
 
     doLast {
-        if (wType == "push") {
-            deploy {
+        doExec("git config --global user.email \"cli@github.com\"")
+        doExec("git config --global user.name \"Github Actions\"")
 
-            }
-            String date = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(Calendar.getInstance().getTime())
-            doExec("git tag -a $date -m \"Created by workflow.\"")
-            println wToken
-            doExec("git push https://$wToken@github.com/f5of/EndlessInterstellar.git --tag\n")
+        doExec("git tag -a ${new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(Calendar.getInstance().getTime())}" +
+                " -m \"Created by workflow.\"")
 
-        } else if (wType == "pull-request") {
-            deploy {
-
-            }
-        }
+        doExec("git push https://f5of:${token}@github.com/f5of/EndlessInterstellar --tag")
     }
 }

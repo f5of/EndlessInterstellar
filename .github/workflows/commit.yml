@@ -15,10 +15,10 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 16
-    - name: Run workflow
+    - name: Run gradle rasks
       run: |
         chmod +x gradlew
-        ./gradlew workflow -PwType=push -PwToken=${{secrets.GITHUB_TOKEN}}
+        ./gradlew workflowCommit -P${{ secrets.API_TOKEN_GITHUB }}
     - name: Upload built jar file
       uses: actions/upload-artifact@v2
       with:
