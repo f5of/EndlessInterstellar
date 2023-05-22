@@ -176,7 +176,8 @@ task workflowCommit {
     dependsOn deploy
 
     doLast {
-        doExec("git config --global user.email \"cli@github.com\"")
+        println "dsf${token}sdf"
+        doExec("git config --global user.email \"actions@github.com\"")
         doExec("git config --global user.name \"Github Actions\"")
 
         doExec("git tag -a ${new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(Calendar.getInstance().getTime())}" +
