@@ -15,7 +15,7 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 16
-    - name: Run gradle rasks
+    - name: Run gradle tasks
       run: |
         chmod +x gradlew
         ./gradlew workflowCommit
