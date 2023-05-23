@@ -1,16 +1,12 @@
-import java.text.DateFormat
-import java.text.SimpleDateFormat
 import java.util.function.Consumer
-
-// root gradle file by nekit508
 
 allprojects { Project project ->
     project.plugins.apply("java")
     project.plugins.apply("idea")
     project.plugins.apply("maven-publish")
 
-    version = "vT0.3.1"
-    group = "github.f5of.endless-interstellar"
+    project.version = properties.get("version")
+    project.group = properties.get("group")
 
     tasks.withType(JavaCompile).configureEach {
         options.forkOptions.jvmArgs += "-Xms256m -Xmx1024m --illegal-access=permit" +
@@ -46,6 +42,25 @@ task cleanBuilds(type: Delete) {
     }
 }
 
+class C extends OutputStream {
+    static String out = ""
+
+    @Override
+    void write(int b) throws IOException {
+        out += String.valueOf((char) b)
+    }
+
+    static String get() {
+        String t = out
+        out = ""
+        return t
+    }
+
+    static void print() {
+        println out
+    }
+}
+
 ext {
     localProperties = new Properties()
     if (new File("$rootProject.projectDir/local.properties").exists())
@@ -55,9 +70,11 @@ ext {
         if (localProperties.containsKey(property))
             set.accept(localProperties.get(property))
     }
+
     doExec = { String cmd ->
+        C.get()
         var proc = cmd.execute(null, rootProject.projectDir)
-        proc.waitForProcessOutput(System.out, System.err)
+        proc.waitForProcessOutput(new PrintStream(new C()), System.err)
     }
 }
 
@@ -106,8 +123,8 @@ subprojects { Project project ->
         options.generatedSourceOutputDirectory = project.file("gen")
         rootProject.ext.setIfHasProp("org.gradle.java.home", v -> options.forkOptions.executable = v)
         options.encoding = "UTF-8"
-        sourceCompatibility = JavaVersion.VERSION_16
-        targetCompatibility = JavaVersion.VERSION_16
+        /*sourceCompatibility = JavaVersion.VERSION_16
+        targetCompatibility = JavaVersion.VERSION_1_8*/
         var finalAPArgs = []
         APArgs.each { String str ->
             if (!str.contains("-A"))
@@ -152,10 +169,11 @@ subprojects { Project project ->
     publishing {
         publications {
             maven(MavenPublication) {
-                groupId project.group
+                groupId "github.${project.group.replaceAll("/", ".")}"
                 artifactId project.name
                 version project.version
                 from components.java
+                println "Dependency path for project ${project} is ${groupId}:${artifactId}:${version}"
             }
         }
     }
@@ -174,15 +192,45 @@ task deploy {
 
 task workflowCommit {
     dependsOn deploy
+}
+
+// only for local machine
+task createRelease {
+    dependsOn deploy
 
     doLast {
-        println "dsf${token}sdf"
-        doExec("git config --global user.email \"actions@github.com\"")
-        doExec("git config --global user.name \"Github Actions\"")
+        var vers = new Properties()
+        vers.load(new FileInputStream(project.file("version.properties")))
+        var descr = "", name = ""
 
-        doExec("git tag -a ${new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(Calendar.getInstance().getTime())}" +
-                " -m \"Created by workflow.\"")
+        if (vers.containsKey("description"))
+            descr = vers.get("description")
 
-        doExec("git push https://f5of:${token}@github.com/f5of/EndlessInterstellar --tag")
+        if (vers.containsKey("name"))
+            name = vers.get("name")
+
+        var un = "", ue = "", ut = ""
+        var tagName = name
+
+        // setup github user
+        setIfHasProp("username", v -> un = v)
+        setIfHasProp("useremail", v -> ue = v)
+        setIfHasProp("usertoken", v -> ut = v)
+        doExec("git config user.name $un --replace-all")
+        doExec("git config user.email $ue --replace-all")
+        var addr = "https://$un:$ut@github.com/${project.group}.git"
+
+        // delete older tag with same name
+        doExec("git tag")
+        var tags = C.get().split("\n")
+        if (Arrays.stream(tags).toList().contains(tagName)) {
+            doExec("git tag -d $tagName")
+            doExec("git push $addr -d tag $tagName")
+            C.print()
+        }
+
+        // push new tag
+        doExec("git tag -a $tagName -m \"${descr}")
+        doExec("git push $addr main $tagName")
     }
 }

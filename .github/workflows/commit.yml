@@ -18,7 +18,7 @@ jobs:
     - name: Run gradle rasks
       run: |
         chmod +x gradlew
-        ./gradlew workflowCommit -Ptoken=${{ secrets.API_TOKEN_GITHUB }}
+        ./gradlew workflowCommit
     - name: Upload built jar file
       uses: actions/upload-artifact@v2
       with:
