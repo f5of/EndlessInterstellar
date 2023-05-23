@@ -201,16 +201,13 @@ task createRelease {
     doLast {
         var vers = new Properties()
         vers.load(new FileInputStream(project.file("version.properties")))
-        var descr = "", name = ""
+        var descr = ""
 
         if (vers.containsKey("description"))
             descr = vers.get("description")
 
-        if (vers.containsKey("name"))
-            name = vers.get("name")
-
         var un = "", ue = "", ut = ""
-        var tagName = name
+        var tagName = project.version
 
         // setup github user
         setIfHasProp("username", v -> un = v)
