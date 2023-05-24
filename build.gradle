@@ -123,8 +123,8 @@ subprojects { Project project ->
         options.generatedSourceOutputDirectory = project.file("gen")
         rootProject.ext.setIfHasProp("org.gradle.java.home", v -> options.forkOptions.executable = v)
         options.encoding = "UTF-8"
-        /*sourceCompatibility = JavaVersion.VERSION_16
-        targetCompatibility = JavaVersion.VERSION_1_8*/
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
         var finalAPArgs = []
         APArgs.each { String str ->
             if (!str.contains("-A"))
