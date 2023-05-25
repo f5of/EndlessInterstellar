@@ -1,6 +1,6 @@
 import java.util.function.Consumer
 
-allprojects { Project project ->
+allprojects.each { Project project ->
     project.plugins.apply("java")
     project.plugins.apply("idea")
     project.plugins.apply("maven-publish")
@@ -9,6 +9,7 @@ allprojects { Project project ->
     project.group = properties.get("group")
 
     tasks.withType(JavaCompile).configureEach {
+        options.fork = true
         options.forkOptions.jvmArgs += "-Xms256m -Xmx1024m --illegal-access=permit" +
                 "--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED" +
                 "--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED" +
@@ -78,7 +79,7 @@ ext {
     }
 }
 
-subprojects { Project project ->
+subprojects.each { Project project ->
     project.sourceSets.main.java.srcDirs = [
             "src", "gen"
     ]
@@ -120,13 +121,11 @@ subprojects { Project project ->
     }
 
     project.tasks.withType(JavaCompile).configureEach {
-        options.generatedSourceOutputDirectory = project.file("gen")
+        options.generatedSourceOutputDirectory.set(project.file("gen"))
         rootProject.ext.setIfHasProp("org.gradle.java.home", v -> options.forkOptions.executable = v)
         options.encoding = "UTF-8"
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
         var finalAPArgs = []
-        APArgs.each { String str ->
+        project.ext.APArgs.each { String str ->
             if (!str.contains("-A"))
                 finalAPArgs.add("-A" + str)
         }
@@ -154,19 +153,19 @@ subprojects { Project project ->
                 from {
                     archiveFile.get()
                 }
-                copyPaths.each { p ->
+                project.ext.copyPaths.each { p ->
                     into(p)
                 }
             }
         }
     }
 
-    java {
+    project.java {
         withSourcesJar()
         withJavadocJar()
     }
 
-    publishing {
+    project.publishing {
         publications {
             maven(MavenPublication) {
                 groupId "github.${project.group.replaceAll("/", ".")}"
