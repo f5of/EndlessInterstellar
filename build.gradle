@@ -142,13 +142,13 @@ subprojects.each { Project project ->
     }
 
     project.tasks.jar {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         from {
-            configurations.runtimeClasspath.collect { File file ->
+            project.configurations.runtimeClasspath.collect { File file ->
                 file.isDirectory() ? file : zipTree(file)
             }
         }
         doLast {
-            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
             copy {
                 from {
                     archiveFile.get()

@@ -7,3 +7,7 @@ dependencies {
     compileOnly project(":annotations")
     annotationProcessor project(":annotations")
 }
+
+ext {
+    copyPaths += ["C:/Users/Никита/AppData/Roaming/Mindustry/mods"]
+}

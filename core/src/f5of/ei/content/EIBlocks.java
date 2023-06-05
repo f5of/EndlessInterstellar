@@ -1,6 +1,8 @@
 package f5of.ei.content;
 
 import arc.graphics.Color;
+import arc.math.geom.Point2;
+import f5of.ei.railroad.UnformedBlock;
 import f5of.ei.world.blocks.power.BeamTransmitter;
 import mindustry.content.Blocks;
 import mindustry.content.Fx;
@@ -19,6 +21,7 @@ import mindustry.world.draw.DrawDefault;
 import mindustry.world.draw.DrawFlame;
 import mindustry.world.draw.DrawMulti;
 import mindustry.world.meta.Attribute;
+import mindustry.world.meta.BlockGroup;
 
 public class EIBlocks {
     public static CoreBlock colonyCore;
@@ -28,21 +31,38 @@ public class EIBlocks {
     public static ArmoredConduit titaniumConduit;
     public static GenericCrafter kryniteSmelter;
 
+    // in dev
+    public static UnformedBlock unformedBlock;
+
     public static SteamVent snowVent, stoneVent;
 
     public static void load() {
-        snowVent = new SteamVent("snow-vent"){{
+        // TODO in dev
+        unformedBlock = new UnformedBlock("unformed-block") {{
+            requirements(Category.effect, ItemStack.with(EIItems.copper, 1));
+
+            size = 1;
+            health = 200;
+            alwaysUnlocked = true;
+
+            update = true;
+            noUpdateDisabled = false;
+            breakable = true;
+            solid = true;
+            group = BlockGroup.none;
+        }};
+        snowVent = new SteamVent("snow-vent") {{
             variants = 2;
             parent = blendGroup = Blocks.snow;
             attributes.set(Attribute.steam, 0.25f);
         }};
-        stoneVent = new SteamVent("stone-vent"){{
+        stoneVent = new SteamVent("stone-vent") {{
             variants = 2;
             parent = blendGroup = Blocks.stone;
             attributes.set(Attribute.steam, 1f);
         }};
 
-        colonyCore = new CoreBlock("colony-core"){{
+        colonyCore = new CoreBlock("colony-core") {{
             requirements(Category.effect, ItemStack.with(EIItems.copper, 1));
             health = 3600;
             armor = 5f;
@@ -54,7 +74,6 @@ public class EIBlocks {
             outputsPower = true;
             consumesPower = false;
             buildType = Build::new;
-            clipSize = 1000;
         }
             class Build extends CoreBlock.CoreBuild {
                 @Override
@@ -63,20 +82,20 @@ public class EIBlocks {
                 }
             }
         };
-        rayTransmitter = new BeamTransmitter("ray-transmitter"){{
+        rayTransmitter = new BeamTransmitter("ray-transmitter") {{
             requirements(Category.power, ItemStack.with(EIItems.copper, 2, EIItems.titanium, 3));
             health = 20;
             size = 1;
             range = 15;
         }};
-        substation = new BeamNode("substation"){{
+        substation = new BeamNode("substation") {{
             requirements(Category.power, ItemStack.with(EIItems.copper, 10, EIItems.titanium, 2));
             range = 5;
             health = 40;
             size = 1;
         }};
 
-        titaniumConveyor = new Conveyor("titanium-conveyor"){{
+        titaniumConveyor = new Conveyor("titanium-conveyor") {{
             requirements(Category.distribution, ItemStack.with(Items.copper, 2, Items.titanium, 1));
             health = 20;
             size = 1;
