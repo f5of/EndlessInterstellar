@@ -26,7 +26,6 @@ import java.nio.ByteBuffer;
 public class Map {
     public static Map currentDrawingInstance;
 
-    //public FrameBuffer buffer = new FrameBuffer();
     public Seq<Cons<Map>> updateRuns = new Seq<>();
 
     public float sclX, sclY;
