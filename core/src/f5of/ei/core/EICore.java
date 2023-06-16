@@ -10,7 +10,8 @@ public class EICore extends Mod {
 
     @Override
     public void init() {
-        new Map();
+        // TODO temperature map
+        //new Map();
     }
 
     @Override

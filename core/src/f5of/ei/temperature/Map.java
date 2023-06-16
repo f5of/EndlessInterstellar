@@ -7,20 +7,13 @@ import arc.graphics.*;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.PixmapRegion;
 import arc.graphics.g2d.TextureRegion;
-import arc.graphics.gl.FrameBuffer;
 import arc.graphics.gl.PixmapTextureData;
-import arc.math.geom.Vec2;
 import arc.struct.Seq;
-import arc.util.Buffers;
 import arc.util.Log;
-import arc.util.Reflect;
 import mindustry.Vars;
 import mindustry.game.EventType;
-import mindustry.gen.Tex;
-import mindustry.graphics.Shaders;
 
 import java.lang.reflect.Field;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 public class Map {
