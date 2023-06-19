@@ -1,4 +1,19 @@
+import arc.files.Fi
+import arc.struct.ObjectMap
+import arc.struct.Seq
+
 import java.util.function.Consumer
+
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url "https://www.jitpack.io" }
+    }
+
+    dependencies {
+        classpath "com.github.Anuken.Arc:arc-core:v144.3"
+    }
+}
 
 allprojects.each { Project project ->
     project.plugins.apply("java")
@@ -63,6 +78,12 @@ class C extends OutputStream {
 }
 
 ext {
+    modConfig = new Fi(rootProject.file("mod.hjson"))
+
+    copyProperties = new Properties()
+    if (rootProject.file("copy.properties").exists())
+        copyProperties.load(new FileInputStream(rootProject.file("copy.properties")))
+
     localProperties = new Properties()
     if (new File("$rootProject.projectDir/local.properties").exists())
         localProperties.load(new FileInputStream(new File("$rootProject.projectDir/local.properties")))
@@ -77,6 +98,10 @@ ext {
         var proc = cmd.execute(null, rootProject.projectDir)
         proc.waitForProcessOutput(new PrintStream(new C()), System.err)
     }
+
+    getOutputJar = {Project p ->
+        return "${rootProject.name}-${p.name}-${p.version}.jar"
+    }
 }
 
 subprojects.each { Project project ->
@@ -88,12 +113,23 @@ subprojects.each { Project project ->
     ]
 
     project.ext {
-        APArgs = ["ProjectName=$project.name", "OutputPackage=f5of.ei.files"]
+        APArgs = ["ProjectName=${project.name}"]
+        var APAProps = new Fi(project.file("APA.properties"))
+        var GAPAProps = new Fi(rootProject.file("APA.properties"))
+        if (GAPAProps.exists()) {
+            APArgs += Arrays.stream(GAPAProps.readString().split("\n")).toList()
+        }
+        if (APAProps.exists()) {
+            APArgs += Arrays.stream(APAProps.readString().split("\n")).toList()
+        }
 
         copyPaths = [
                 "$rootProject.projectDir/artifacts",
         ]
-        mindustryVersion = "v143.1"
+        if (rootProject.ext.copyProperties.containsKey(project.name))
+            copyPaths += Arrays.stream(rootProject.ext.copyProperties.get(project.name).split(";")).toList()
+
+        mindustryVersion = "v144.3"
 
         child = { File p, String c ->
             return new File(p, c)
@@ -105,10 +141,12 @@ subprojects.each { Project project ->
             var processorFile = child(processorPath, ("javax.annotation.processing.Processor"))
             var text = new StringBuilder()
             var srcFiles = project.sourceSets.main.java.srcDirs.getAt(0)
-            srcFiles.eachFileRecurse(groovy.io.FileType.FILES){ file ->
-                if(file.name.endsWith(".java") && ((file.text.contains(" extends AbstractProcessor")
-                        && !file.text.contains("abstract class")))){
-                    text.append(file.path.substring(srcFiles.path.length() + 1)).append("\n")
+            if (srcFiles.exists()) {
+                srcFiles.eachFileRecurse(groovy.io.FileType.FILES) { file ->
+                    if (file.name.endsWith(".java") && ((file.text.contains(" extends AbstractProcessor")
+                            && !file.text.contains("abstract class")))) {
+                        text.append(file.path.substring(srcFiles.path.length() + 1)).append("\n")
+                    }
                 }
             }
             processorFile.text = text.toString().replace(".java", "").replace("/", ".").replace("\\", ".")
@@ -120,7 +158,13 @@ subprojects.each { Project project ->
         maven { url "https://www.jitpack.io" }
     }
 
+    project.dependencies {
+        annotationProcessor "com.github.Anuken:jabel:93fde537c7"
+    }
+
     project.tasks.withType(JavaCompile).configureEach {
+        targetCompatibility = 8
+        sourceCompatibility = JavaVersion.VERSION_16
         options.generatedSourceOutputDirectory.set(project.file("gen"))
         rootProject.ext.setIfHasProp("org.gradle.java.home", v -> options.forkOptions.executable = v)
         options.encoding = "UTF-8"
@@ -130,9 +174,25 @@ subprojects.each { Project project ->
                 finalAPArgs.add("-A" + str)
         }
         options.compilerArgs += finalAPArgs
+        if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
+            options.compilerArgs.addAll(['--release', '8'])
+        }
 
         doFirst {
             delete options.generatedSourceOutputDirectory.get().asFile.listFiles()
+        }
+    }
+
+    project.tasks.create("copyJar") {
+        doLast {
+            copy {
+                from {
+                    project.tasks.jar.archiveFile.get()
+                }
+                project.ext.copyPaths.each { p ->
+                    into(p)
+                }
+            }
         }
     }
 
@@ -142,22 +202,16 @@ subprojects.each { Project project ->
     }
 
     project.tasks.jar {
+        archiveFileName = rootProject.ext.getOutputJar(project)
+
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         from {
             project.configurations.runtimeClasspath.collect { File file ->
                 file.isDirectory() ? file : zipTree(file)
             }
         }
-        doLast {
-            copy {
-                from {
-                    archiveFile.get()
-                }
-                project.ext.copyPaths.each { p ->
-                    into(p)
-                }
-            }
-        }
+
+        finalizedBy project.tasks.copyJar
     }
 
     project.java {
@@ -193,7 +247,7 @@ task workflowCommit {
     dependsOn deploy
 }
 
-// only for local machine
+// only for local machine (still in dev)
 task createRelease {
     dependsOn deploy
 

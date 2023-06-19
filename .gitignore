@@ -1,12 +1,14 @@
 ### Gradle
-local.properties
+/local.properties
 build/
 cache/
 /.gradle/
 /artifacts/
+/copy.properties
 
-### idea
+### IntelliJ IDEA
 /.idea/
 
-### Generated
-gen/
+### Aseprite
+*.aseprite
+*.ase

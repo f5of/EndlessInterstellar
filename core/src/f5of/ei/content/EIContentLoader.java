@@ -2,7 +2,7 @@ package f5of.ei.content;
 
 import arc.Events;
 import arc.struct.Seq;
-import f5of.ei.files.core.Loads;
+import f5of.ei.files.loads.core.Loads;
 import mindustry.Vars;
 import mindustry.ctype.Content;
 import mindustry.game.EventType;

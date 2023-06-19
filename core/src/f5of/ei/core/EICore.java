@@ -1,6 +1,7 @@
 package f5of.ei.core;
 
 import f5of.annotations.Annotations;
+import f5of.ei.campaign.CampaignController;
 import f5of.ei.content.EIContentLoader;
 import f5of.ei.temperature.Map;
 import mindustry.mod.Mod;
@@ -10,8 +11,10 @@ public class EICore extends Mod {
 
     @Override
     public void init() {
-        // TODO temperature map
+        // TODO temperature
         //new Map();
+
+        new CampaignController();
     }
 
     @Override

@@ -27,7 +27,7 @@ import java.nio.file.Path;
 import java.util.Set;
 
 @SupportedOptions({"ProjectName", "OutputPackage"})
-@SupportedSourceVersion(SourceVersion.RELEASE_16)
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedAnnotationTypes("f5of.annotations.Annotations.Load")
 public class LoadProcessor extends AbstractProcessor {
     String projectName;
@@ -63,7 +63,7 @@ public class LoadProcessor extends AbstractProcessor {
         projectName = get("ProjectName", "none");
         outputPackage = get("OutputPackage", "none");
 
-        Log.info("Handling project @.", projectName);
+        Log.info("Handling project @", projectName);
     }
 
     @Override
@@ -112,11 +112,11 @@ public class LoadProcessor extends AbstractProcessor {
         builder.addMethod(loader.build());
 
         try {
-            Log.info("Writing file @.", outputPackage + "." + projectName);
+            Log.info("Writing file @", outputPackage + "." + projectName);
             JavaFile.builder(outputPackage + "." + projectName,
                     builder.build()).build().writeTo(processingEnv.getFiler());
         } catch (IOException e) {
-            Log.err("Class not witten.", e);
+            Log.err("Class not written.", e);
         }
     }
 
