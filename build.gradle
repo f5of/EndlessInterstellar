@@ -130,6 +130,7 @@ subprojects.each { Project project ->
             copyPaths += Arrays.stream(rootProject.ext.copyProperties.get(project.name).split(";")).toList()
 
         mindustryVersion = "v144.3"
+        arcLibVersion = "2c2634c"
 
         child = { File p, String c ->
             return new File(p, c)

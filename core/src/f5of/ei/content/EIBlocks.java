@@ -1,8 +1,7 @@
 package f5of.ei.content;
 
 import arc.graphics.Color;
-import arc.math.geom.Point2;
-import f5of.ei.railroad.UnformedBlock;
+import f5of.ei.satellites.SatellitesSystemAccessorBlock;
 import f5of.ei.world.blocks.power.BeamTransmitter;
 import mindustry.content.Blocks;
 import mindustry.content.Fx;
@@ -21,8 +20,6 @@ import mindustry.world.draw.DrawDefault;
 import mindustry.world.draw.DrawFlame;
 import mindustry.world.draw.DrawMulti;
 import mindustry.world.meta.Attribute;
-import mindustry.world.meta.BlockGroup;
-
 public class EIBlocks {
     public static CoreBlock colonyCore;
     public static BeamTransmitter rayTransmitter;
@@ -31,26 +28,11 @@ public class EIBlocks {
     public static ArmoredConduit titaniumConduit;
     public static GenericCrafter kryniteSmelter;
 
-    // in dev
-    public static UnformedBlock unformedBlock;
-
     public static SteamVent snowVent, stoneVent;
 
+    public static SatellitesSystemAccessorBlock satellitesSystemAccessorBlock;
+
     public static void load() {
-        // TODO in dev
-        unformedBlock = new UnformedBlock("unformed-block") {{
-            requirements(Category.effect, ItemStack.with(EIItems.copper, 1));
-
-            size = 1;
-            health = 200;
-            alwaysUnlocked = true;
-
-            update = true;
-            noUpdateDisabled = false;
-            breakable = true;
-            solid = true;
-            group = BlockGroup.none;
-        }};
         snowVent = new SteamVent("snow-vent") {{
             variants = 2;
             parent = blendGroup = Blocks.snow;
@@ -106,7 +88,7 @@ public class EIBlocks {
             hasPower = true;
             consumesPower = true;
             conductivePower = true;
-            consumePower(10 / 60f);
+            consumePower(1 / 60f);
         }};
 
         titaniumConduit = new ArmoredConduit("titanium-conduit"){{
@@ -135,6 +117,12 @@ public class EIBlocks {
 
             consumeItems(ItemStack.with(EIItems.copper, 3, EIItems.titanium, 1));
             consumePower(80 / 60f);
+        }};
+
+        satellitesSystemAccessorBlock = new SatellitesSystemAccessorBlock("ssab"){{
+            requirements(Category.effect, ItemStack.with(EIItems.titanium, 40, EIItems.copper, 50));
+            size = 4;
+            health = 400;
         }};
     }
 }

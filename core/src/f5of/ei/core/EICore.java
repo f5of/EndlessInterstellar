@@ -1,9 +1,8 @@
 package f5of.ei.core;
 
 import f5of.annotations.Annotations;
-import f5of.ei.campaign.CampaignController;
 import f5of.ei.content.EIContentLoader;
-import f5of.ei.temperature.Map;
+import f5of.ei.graphics.EIShaders;
 import mindustry.mod.Mod;
 
 @Annotations.ModCore
@@ -14,7 +13,11 @@ public class EICore extends Mod {
         // TODO temperature
         //new Map();
 
-        new CampaignController();
+        EIShaders.load();
+
+        EIVars.ui.build();
+
+        EIVars.satellitesController.start();
     }
 
     @Override
