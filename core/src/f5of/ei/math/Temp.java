@@ -7,6 +7,7 @@ import arc.math.geom.Vec3;
 import arc.struct.ObjectMap;
 import arc.struct.Seq;
 
+// TODO poor
 public class Temp {
     public static final ObjectMap<Class<?>, TypeEntry<?>> types = new ObjectMap<>();
 

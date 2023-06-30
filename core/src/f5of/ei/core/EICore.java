@@ -17,7 +17,8 @@ public class EICore extends Mod {
 
         EIVars.ui.build();
 
-        EIVars.satellitesController.start();
+        // TODO satellites
+        //EIVars.satellitesController.start();
     }
 
     @Override

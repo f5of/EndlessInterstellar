@@ -20,6 +20,8 @@ import mindustry.world.draw.DrawDefault;
 import mindustry.world.draw.DrawFlame;
 import mindustry.world.draw.DrawMulti;
 import mindustry.world.meta.Attribute;
+import mindustry.world.meta.BuildVisibility;
+
 public class EIBlocks {
     public static CoreBlock colonyCore;
     public static BeamTransmitter rayTransmitter;
@@ -120,7 +122,7 @@ public class EIBlocks {
         }};
 
         satellitesSystemAccessorBlock = new SatellitesSystemAccessorBlock("ssab"){{
-            requirements(Category.effect, ItemStack.with(EIItems.titanium, 40, EIItems.copper, 50));
+            requirements(Category.effect, BuildVisibility.debugOnly, ItemStack.with(EIItems.titanium, 40, EIItems.copper, 50));
             size = 4;
             health = 400;
         }};
