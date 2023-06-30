@@ -1,14 +1,15 @@
 package f5of.ei.ui;
 
+import f5of.ei.satellites.SatelliteAccessDialog;
+import f5of.ei.satellites.SatellitesDialog;
+
 public class EIUI {
-    // TODO satellites
-    //public SatellitesDialog satellitesDialog;
-    //public SatelliteAccessDialog satelliteAccessDialog;
+    public SatellitesDialog satellitesDialog;
+    public SatelliteAccessDialog satelliteAccessDialog;
 
     public EIUI() {
-        // TODO satellites
-        //satellitesDialog = new SatellitesDialog();
-        //satelliteAccessDialog = new SatelliteAccessDialog();
+        satellitesDialog = new SatellitesDialog();
+        satelliteAccessDialog = new SatelliteAccessDialog();
     }
 
     public void build() {
