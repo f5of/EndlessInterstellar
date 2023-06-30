@@ -13,8 +13,12 @@ public class EIContentLoader {
     public static void load() {
         Seq<Content> before = createContentList();
 
+        EILiquids.load();
         EIItems.load();
         EIBlocks.load();
+        EIPlanets.load();
+
+        EITechTree.load();
 
         Seq<Content> after = createContentList();
         after.each(c -> {

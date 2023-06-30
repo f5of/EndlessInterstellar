@@ -62,10 +62,11 @@ public class EIBlocks {
             class Build extends CoreBlock.CoreBuild {
                 @Override
                 public float getPowerProduction() {
-                    return 200f / 60f;
+                    return 201f / 60f;
                 }
             }
         };
+
         rayTransmitter = new BeamTransmitter("ray-transmitter") {{
             requirements(Category.power, ItemStack.with(EIItems.copper, 2, EIItems.titanium, 3));
             health = 20;
